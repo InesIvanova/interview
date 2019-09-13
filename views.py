@@ -2,7 +2,7 @@ from flask_restful import Resource, reqparse, request
 from flask import jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
 
-from models import Contact
+from models import Contact, Email
 from app import db
 from flask_api import status, exceptions
 import json
@@ -65,6 +65,28 @@ class ContactRetrieveUpdateDeleteView(Resource):
             db.session.commit()
             return jsonify({'message': 'No Content', 'status': status.HTTP_204_NO_CONTENT})
         return jsonify({'message': 'Not Found', 'status': status.HTTP_404_NOT_FOUND})
+
+
+class EmailListCreateView(Resource):
+    def get(self):
+        emails = Email.query.all()
+        return jsonify({'emails': [result.serialize for result in emails]})
+
+    def post(self):
+        if request.form:
+            data = request.form
+            contact_email = data['email']
+            email = Email(email=contact_email)
+            db.session.add(email)
+
+            try:
+                db.session.commit()
+            except SQLAlchemyError as ex:
+                error = str(ex.__dict__['orig'])
+                return jsonify({'message': error, 'status': status.HTTP_400_BAD_REQUEST})
+
+            return jsonify({'status': '201'})
+        return jsonify({'message': 'Request data was not in a correct format', 'status': status.HTTP_400_BAD_REQUEST})
 
 
 
