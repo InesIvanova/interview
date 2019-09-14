@@ -35,7 +35,7 @@ class Email(db.Model):
     __tablename__ = 'email'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     email = db.Column(EmailType)
-    contact_id = db.Column(db.Integer, ForeignKey('contacts.id'), nullable=False)
+    contact_id = db.Column(db.Integer, ForeignKey('contacts.id', ondelete='CASCADE'), nullable=False)
     contact = relationship('Contact', backref='contact_emails', foreign_keys=[contact_id])
 
     def __init__(self, email, contact_id):

@@ -66,6 +66,8 @@ class ContactRetrieveUpdateDeleteView(Resource):
 
     def delete(self, id):
         contact = Contact.query.filter_by(id=id).first()
+        emails = Email.query.filter_by(contact_id=id)
+        [db.session.delete(mail) for mail in emails]
         if contact:
             db.session.delete(contact)
             db.session.commit()
