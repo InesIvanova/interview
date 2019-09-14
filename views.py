@@ -1,10 +1,15 @@
 from flask_restful import Resource, request
 from flask import jsonify, request
 from sqlalchemy.exc import SQLAlchemyError
+from flask_api import status, exceptions
 
 from models import Contact, Email
 from app import db
-from flask_api import status, exceptions
+from app import celery
+
+from datetime import datetime, timedelta
+import random
+import string
 
 
 class ContactListCreateView(Resource):
@@ -16,7 +21,6 @@ class ContactListCreateView(Resource):
                 return jsonify({'contact': contact.serialize, 'message': 'OK', 'status': status.HTTP_200_OK})
             return jsonify({'message': 'Not Found', 'status': status.HTTP_404_NOT_FOUND})
         contacts = Contact.query.all()
-        print('here')
         return jsonify({'contacts': [result.serialize for result in contacts]})
 
     def post(self):
@@ -67,10 +71,29 @@ class ContactRetrieveUpdateDeleteView(Resource):
     def delete(self, id):
         contact = Contact.query.filter_by(id=id).first()
         emails = Email.query.filter_by(contact_id=id)
-        [db.session.delete(mail) for mail in emails]
         if contact:
             db.session.delete(contact)
             db.session.commit()
             return jsonify({'message': 'No Content', 'status': status.HTTP_204_NO_CONTENT})
         return jsonify({'message': 'Not Found', 'status': status.HTTP_404_NOT_FOUND})
+
+
+@celery.task()
+def create_contact():
+    print('run')
+    username = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
+    first_name = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
+    last_name = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
+    contact = Contact(username=username, first_name=first_name, last_name=last_name)
+    db.session.add(contact)
+    db.session.commit()
+
+
+@celery.task()
+def remove_contact():
+    time_threshold = datetime.now() - timedelta(seconds=60)
+    contacts_old = Contact.query.filter(Contact.creation_time <= time_threshold)
+    for c in contacts_old:
+        db.session.delete(c)
+    db.session.commit()
 

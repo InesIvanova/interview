@@ -1,7 +1,8 @@
 from app import db
 from sqlalchemy_utils import EmailType
 from sqlalchemy.orm import relationship
-from sqlalchemy import ForeignKey
+from sqlalchemy import ForeignKey, DateTime
+from datetime import datetime
 
 
 class Contact(db.Model):
@@ -10,6 +11,7 @@ class Contact(db.Model):
     username = db.Column(db.String, unique=True, nullable=False)
     first_name = db.Column(db.String, nullable=False)
     last_name = db.Column(db.String, nullable=False)
+    creation_time = db.Column(DateTime, default=datetime.now())
 
     def __repr__(self):
         return f"{self.id} {self.username} {self.first_name} {self.last_name} "
@@ -21,13 +23,13 @@ class Contact(db.Model):
 
     @property
     def serialize(self):
-        """Return object data in serializeable format"""
         return {
             'id': self.id,
             'username': self.username,
             'first_name': self.first_name,
             'last_name': self.last_name,
-            'contact_emails': [mail.serialize for mail in self.contact_emails]
+            'emails': [mail.serialize for mail in self.contact_emails],
+            'creation_time': self.creation_time
         }
 
 
@@ -44,9 +46,7 @@ class Email(db.Model):
 
     @property
     def serialize(self):
-        """Return object data in serializeable format"""
         return {
             'id': self.id,
             'email': self.email,
-            'contact_id': self.contact_id
         }
