@@ -1,9 +1,10 @@
 from flask import Flask
-
 from flask_sqlalchemy import SQLAlchemy
 from flask_script import Manager
 from flask_migrate import Migrate, MigrateCommand
+
 from celery_init import make_celery
+
 import os
 from datetime import timedelta
 
@@ -21,11 +22,11 @@ app.config.update(
     CELERY_RESULT_BACKEND='redis://localhost:6379',
     CELERYBEAT_SCHEDULE={
         'run-every-15-seconds': {
-            'task': 'views.create_contact',
+            'task': 'tasks.create_contact',
             'schedule': timedelta(seconds=15)
         },
         'run-every-1-minute': {
-            'task': 'views.remove_contact',
+            'task': 'tasks.remove_contact',
             'schedule': timedelta(seconds=60)
         }
     }

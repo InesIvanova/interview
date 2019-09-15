@@ -37,7 +37,7 @@ class ContactListCreateView(Resource):
             except SQLAlchemyError as ex:
                 error = str(ex.__dict__['orig'])
                 return jsonify({'message': error, 'status': status.HTTP_400_BAD_REQUEST})
-            print(data.keys())
+
             if 'contact_emails' in data.keys():
                 emails_names = data['contact_emails']
                 for name in emails_names:
@@ -78,23 +78,4 @@ class ContactRetrieveUpdateDeleteView(Resource):
             return jsonify({'message': 'No Content', 'status': status.HTTP_204_NO_CONTENT})
         return jsonify({'message': 'Not Found', 'status': status.HTTP_404_NOT_FOUND})
 
-
-@celery.task()
-def create_contact():
-    print('run')
-    username = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
-    first_name = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
-    last_name = ''.join([random.choice(string.ascii_letters + string.digits) for n in range(32)])
-    contact = Contact(username=username, first_name=first_name, last_name=last_name)
-    db.session.add(contact)
-    db.session.commit()
-
-
-@celery.task()
-def remove_contact():
-    time_threshold = datetime.now() - timedelta(seconds=60)
-    contacts_old = Contact.query.filter(Contact.creation_time <= time_threshold)
-    for c in contacts_old:
-        db.session.delete(c)
-    db.session.commit()
 

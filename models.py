@@ -1,7 +1,9 @@
-from app import db
 from sqlalchemy_utils import EmailType
 from sqlalchemy.orm import relationship
 from sqlalchemy import ForeignKey, DateTime
+
+from app import db
+
 from datetime import datetime
 
 
